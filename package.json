@@ -1,0 +1,26 @@
+{
+  "name": "instant-ping",
+  "module": "src/server.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/server.ts",
+    "serve": "bun run --watch src/server.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.19.0",
+    "@types/bun": "latest",
+    "@types/passport": "^1.0.17",
+    "dotenv": "^16.4.7",
+    "eslint": "^9.19.0",
+    "globals": "^15.14.0",
+    "typescript-eslint": "^8.22.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@hono/oauth-providers": "^0.6.2",
+    "hono": "^4.6.20",
+    "hono-sessions": "^0.7.1"
+  }
+}
