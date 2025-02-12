@@ -1,6 +1,11 @@
 import { Hono } from 'hono';
 import { googleAuth } from '@hono/oauth-providers/google';
-import { googleLogin, googleLogout, status } from '../controllers/auth';
+import {
+  googleLogin,
+  googleLogout,
+  status,
+  testRandom,
+} from '../controllers/auth';
 
 const app = new Hono();
 
@@ -18,5 +23,7 @@ app.use(
 );
 
 app.get('/logout', googleLogout);
+
+app.get('/test', testRandom);
 
 export default app;

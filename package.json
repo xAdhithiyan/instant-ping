@@ -10,9 +10,12 @@
     "@eslint/js": "^9.19.0",
     "@types/bun": "latest",
     "@types/passport": "^1.0.17",
+    "@types/pg": "^8.11.11",
     "dotenv": "^16.4.7",
+    "drizzle-kit": "^0.30.4",
     "eslint": "^9.19.0",
     "globals": "^15.14.0",
+    "tsx": "^4.19.2",
     "typescript-eslint": "^8.22.0"
   },
   "peerDependencies": {
@@ -20,7 +23,9 @@
   },
   "dependencies": {
     "@hono/oauth-providers": "^0.6.2",
+    "drizzle-orm": "^0.39.2",
     "hono": "^4.6.20",
-    "hono-sessions": "^0.7.1"
+    "hono-sessions": "^0.7.1",
+    "postgres": "^3.4.5"
   }
 }
