@@ -1,11 +1,6 @@
 import { Hono } from 'hono';
 import { googleAuth } from '@hono/oauth-providers/google';
-import {
-  googleLogin,
-  googleLogout,
-  status,
-  testRandom,
-} from '../controllers/auth';
+import { googleLogin, googleLogout, status } from '../controllers/auth';
 
 const app = new Hono();
 
@@ -16,14 +11,12 @@ app.use(
   googleAuth({
     client_id: process.env.GOOGLE_CLIENT_ID,
     client_secret: process.env.GOOGLE_CLIENT_SECRECT,
-    redirect_uri: process.env.GOOGLE_CALLBACK,
-    scope: ['profile'],
+    redirect_uri: process.env.GOOGLE_CALLBACK_2,
+    scope: ['profile', 'https://www.googleapis.com/auth/gmail.readonly'],
   }),
   googleLogin,
 );
 
 app.get('/logout', googleLogout);
-
-app.get('/test', testRandom);
 
 export default app;

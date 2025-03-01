@@ -24,8 +24,10 @@
   "dependencies": {
     "@hono/oauth-providers": "^0.6.2",
     "drizzle-orm": "^0.39.2",
+    "googleapis": "^144.0.0",
     "hono": "^4.6.20",
     "hono-sessions": "^0.7.1",
-    "postgres": "^3.4.5"
+    "postgres": "^3.4.5",
+    "tunnelmole": "^2.3.7"
   }
 }

@@ -1,5 +1,4 @@
 import { type Context } from 'hono';
-import info from '../utils/constants';
 import { db } from '../db/db';
 import { users } from '../db/schema/users';
 import { eq } from 'drizzle-orm';
@@ -33,8 +32,13 @@ export async function googleLogin(c: Context): Promise<Response> {
       .where(eq(users.id, googleUser.id));
 
     if (currentUser.length > 0) {
-      console.log('user exists');
-      console.log(currentUser);
+      const updatedUser = await db
+        .update(users)
+        .set({ token: token.token })
+        .where(eq(users.id, googleUser.id))
+        .returning();
+
+      console.log('user exists', updatedUser);
     } else {
       const newUser = await db
         .insert(users)
@@ -46,22 +50,17 @@ export async function googleLogin(c: Context): Promise<Response> {
           picture: googleUser.picture,
         })
         .returning();
-      console.log('new user created');
-      console.log(newUser);
+      console.log('new user created', newUser);
     }
 
+    // hash the id
     const session = c.get('session');
-    // hash the token
-    session.set('id', token?.token);
+    session.set('id', googleUser.id);
     return c.redirect('/api/auth/status');
   } catch (e) {
     console.log(e);
     return c.json({ e });
   }
-}
-
-export async function testRandom(c: Context) {
-  return c.text('test');
 }
 
 export function googleLogout(c: Context) {

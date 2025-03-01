@@ -3,12 +3,15 @@ import { logger } from 'hono/logger';
 import { trimTrailingSlash } from 'hono/trailing-slash';
 import { CookieStore, sessionMiddleware, Session } from 'hono-sessions';
 import { getCookie } from 'hono/cookie';
-import { type SessionDataTypes, type userType } from './types/types.ts';
+import { type SessionDataTypes } from './types/types.ts';
 import { isAuthenticated } from './middleware/isAuthenticated.ts';
-import './db/db.ts';
 import authRouter from './routes/auth.ts';
+import mailRouter from './routes/mail.ts';
 import dotenv from 'dotenv';
 import path from 'path';
+import './db/db.ts';
+import './utils/authClient.ts';
+import './utils/tunneling.ts';
 
 dotenv.config({
   path: path.resolve(__dirname, '../.env'),
@@ -18,7 +21,6 @@ const app = new Hono<{
   Variables: {
     session: Session<SessionDataTypes>;
     session_key_rotation: boolean;
-    user: userType;
   };
 }>({});
 
@@ -41,6 +43,7 @@ app.use(
 app.use('*', isAuthenticated);
 
 app.route('/api/auth', authRouter);
+app.route('/api/mail', mailRouter);
 
 app.get('/api', (c: Context) => {
   try {

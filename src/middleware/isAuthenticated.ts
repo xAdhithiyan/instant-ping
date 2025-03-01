@@ -1,21 +1,26 @@
 import type { Context, Next } from 'hono';
-import info from '../utils/constants';
+import { db } from '../db/db';
+import { users } from '../db/schema/users';
+import { eq } from 'drizzle-orm';
 
 export async function isAuthenticated(c: Context, next: Next) {
   const session = c.get('session');
-  if (c.req.path.startsWith('/api/auth')) {
+  if (
+    c.req.path.startsWith('/api/auth') ||
+    c.req.path.match('/api/mail/webhook')
+  ) {
     await next();
-  } else if (session.get('id')) {
-    // postgress implementation
-    console.log(session.get('id'));
-    for (let i = 0; i < info.length; i++) {
-      if (info[i].token.token == session.get('id')) {
-        console.log('set');
-        c.set('user', info[i]);
-      }
-    }
+  } else {
+    console.log('attached user to request');
+    const currentUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, session.get('id')));
 
-    await next();
+    if (currentUser.length > 0) {
+      c.set('user', currentUser[0]);
+      await next();
+    }
   }
 
   return c.json({ isAuthenticated: false });
