@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 
 const authClient = (() => {
-  let auth = new google.auth.OAuth2();
+  const auth = new google.auth.OAuth2();
 
   const getAuth = () => {
     return auth;

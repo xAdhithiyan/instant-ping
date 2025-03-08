@@ -32,7 +32,7 @@ export async function isAuthenticated(c: Context, next: Next) {
         if (fetchedUser.length > 0) {
           const expireDate: Date = new Date(
             fetchedUser[0].updated_at.getTime() +
-              fetchedUser[0].expired_at * 1000,
+              fetchedUser[0].expired_at * 1000
           );
 
           const currentDate: Date = new Date();
@@ -41,7 +41,7 @@ export async function isAuthenticated(c: Context, next: Next) {
             c.set('user', fetchedUser[0]);
           } else {
             console.log('access denied');
-            const newUser = await db
+            await db
               .update(users)
               .set({ verified: false })
               .where(eq(users.id, session.get('id')));
@@ -65,8 +65,7 @@ export async function isAuthenticated(c: Context, next: Next) {
         .where(eq(users.id, session.get('id')));
       if (fetchedUser.length > 0) {
         const expireDate: Date = new Date(
-          fetchedUser[0].updated_at.getTime() +
-            fetchedUser[0].expired_at * 1000,
+          fetchedUser[0].updated_at.getTime() + fetchedUser[0].expired_at * 1000
         );
         const currentDate: Date = new Date();
         if (currentDate < expireDate) {
@@ -75,7 +74,7 @@ export async function isAuthenticated(c: Context, next: Next) {
           await next();
         } else {
           console.log('access denied');
-          const newUser = await db
+          await db
             .update(users)
             .set({ verified: false })
             .where(eq(users.id, session.get('id')));

@@ -2,7 +2,6 @@ import { Hono, type Context } from 'hono';
 import { logger } from 'hono/logger';
 import { trimTrailingSlash } from 'hono/trailing-slash';
 import { CookieStore, sessionMiddleware, Session } from 'hono-sessions';
-import { getCookie } from 'hono/cookie';
 import { type SessionDataTypes } from './types/types.ts';
 import { isAuthenticated } from './middleware/isAuthenticated.ts';
 import authRouter from './routes/auth.ts';
@@ -37,7 +36,7 @@ app.use(
       path: '/',
       httpOnly: true,
     },
-  }),
+  })
 );
 app.use('*', isAuthenticated);
 
@@ -46,8 +45,8 @@ app.route('/api/mail', mailRouter);
 
 app.get('/api', (c: Context) => {
   try {
-    const session = c.get('session');
-    const cok = getCookie(c, 'session');
+    // const session = c.get('session');
+    // const cok = getCookie(c, 'session');
     //console.log('cookie:', cok);
     //console.log(session);
     console.log('user attached to the request', c.get('user'));

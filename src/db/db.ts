@@ -6,7 +6,7 @@ const connectionString = postgres({
   database: process.env.DATABASE_DB,
   username: process.env.DATABASE_NAME,
   password: process.env.DATABASE_PASSWORD,
-  port: process.env.DATABASE_PORT,
+  port: Number(process.env.DATABASE_PORT),
 });
 
 export const db = drizzle(connectionString);

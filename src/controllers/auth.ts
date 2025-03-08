@@ -1,8 +1,8 @@
 import { type Context } from 'hono';
 import { db } from '../db/db';
 import { users } from '../db/schema/users';
-import { eq } from 'drizzle-orm';
-import { phoneSchema, otpSchema } from '../utils/zodSchema';
+import { eq, isNull } from 'drizzle-orm';
+import { phoneSchema } from '../utils/zodSchema';
 import otp from '../utils/otpGenerator';
 
 export function status(c: Context): Response {
@@ -30,7 +30,7 @@ export async function googleLogin(c: Context): Promise<Response> {
     const currentUser = await db
       .select()
       .from(users)
-      .where(eq(users.id, googleUser.id));
+      .where(googleUser.id ? eq(users.id, googleUser.id) : isNull(users.id));
 
     if (currentUser.length > 0) {
       const updatedUser = await db
@@ -41,7 +41,7 @@ export async function googleLogin(c: Context): Promise<Response> {
           updated_at: new Date(),
           verified: true,
         })
-        .where(eq(users.id, googleUser.id))
+        .where(googleUser.id ? eq(users.id, googleUser.id) : isNull(users.id))
         .returning();
 
       console.log('user exists', updatedUser);
@@ -96,9 +96,10 @@ export async function numberAuth(c: Context) {
 
     const response = await fetch(
       `https://graph.facebook.com/v22.0/${process.env.WHATSAPP_PHONE_ID}/messages`,
-      options,
+      options
     );
     const finalData = await response.json();
+    console.log(finalData);
 
     return c.text('number authentication');
   } catch (e) {
@@ -112,7 +113,7 @@ export async function numberVerify(c: Context) {
     const body = await c.req.json();
     const verified = otp.verifyOtp(c.get('user').id, body.otp);
     if (verified) {
-      const currentUser = await db
+      await db
         .update(users)
         .set({ phonenumber: `91${verified.phoneNumber}` }) // change to support all countries
         .where(eq(users.id, c.get('user').id));
@@ -123,7 +124,7 @@ export async function numberVerify(c: Context) {
     }
   } catch (e) {
     console.log(e);
-    return c.json({ e: e.message }, 400);
+    return c.json({ err: (e as Error).message }, 400);
   }
 }
 

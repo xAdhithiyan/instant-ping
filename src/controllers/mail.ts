@@ -2,7 +2,7 @@ import type { Context } from 'hono';
 import { google } from 'googleapis';
 import authClient from '../utils/authClient';
 
-export async function getnMail(c: Context, totalMails = 1) {
+export async function getnMail(c: Context): Promise<Response> {
   try {
     authClient.setAuth(c.get('user').token);
     const mail = google.gmail({ version: 'v1', auth: authClient.getAuth() });
@@ -13,7 +13,7 @@ export async function getnMail(c: Context, totalMails = 1) {
 
     const mailDetials = await mail.users.messages.get({
       userId: 'me',
-      id: lastMail.data?.messages[0].id as string,
+      id: lastMail.data?.messages?.[0].id as string,
     });
 
     console.log(mailDetials);
@@ -30,7 +30,7 @@ export async function getnMail(c: Context, totalMails = 1) {
       body: JSON.stringify({
         messaging_product: 'whatsapp',
         // change mobile number
-        to: '919629050439',
+        to: '',
         type: 'text',
         text: { body: 'hello how are you' },
       }),
@@ -38,7 +38,7 @@ export async function getnMail(c: Context, totalMails = 1) {
 
     const response = await fetch(
       `https://graph.facebook.com/v22.0/${process.env.WHATSAPP_PHONE_ID}/messages`,
-      options,
+      options
     );
     const data = await response.json();
     console.log(data);
@@ -46,7 +46,7 @@ export async function getnMail(c: Context, totalMails = 1) {
     return c.text('all mail');
   } catch (e) {
     console.log(e);
-    return c.json({ err: e.message });
+    return c.json({ err: (e as Error).message });
   }
 }
 
@@ -56,7 +56,7 @@ export async function webHookVerify(c: Context) {
     c.req.query('hub.mode') === 'subscribe' &&
     c.req.query('hub.verify_token') === process.env.WHATSAPP_WEBHOOK_TOKEN
   ) {
-    return c.text(c.req.query('hub.challenge'), 200);
+    return c.text(c.req.query('hub.challenge') || '', 200);
   } else {
     return c.text('Forbidden', 403);
   }
