@@ -11,7 +11,6 @@ import dotenv from 'dotenv';
 import path from 'path';
 import './db/db.ts';
 import './utils/authClient.ts';
-import './utils/tunneling.ts';
 
 dotenv.config({
   path: path.resolve(__dirname, '../.env'),

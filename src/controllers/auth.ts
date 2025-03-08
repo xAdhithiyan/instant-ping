@@ -2,6 +2,8 @@ import { type Context } from 'hono';
 import { db } from '../db/db';
 import { users } from '../db/schema/users';
 import { eq } from 'drizzle-orm';
+import { phoneSchema, otpSchema } from '../utils/zodSchema';
+import otp from '../utils/otpGenerator';
 
 export function status(c: Context): Response {
   try {
@@ -25,7 +27,6 @@ export async function googleLogin(c: Context): Promise<Response> {
     const token = c.get('token')!;
     //const grantedScopes = c.get('granted-scopes')!;
     const googleUser = c.get('user-google')!;
-
     const currentUser = await db
       .select()
       .from(users)
@@ -34,7 +35,12 @@ export async function googleLogin(c: Context): Promise<Response> {
     if (currentUser.length > 0) {
       const updatedUser = await db
         .update(users)
-        .set({ token: token.token })
+        .set({
+          token: token.token,
+          expired_at: token.expires_in,
+          updated_at: new Date(),
+          verified: true,
+        })
         .where(eq(users.id, googleUser.id))
         .returning();
 
@@ -48,6 +54,9 @@ export async function googleLogin(c: Context): Promise<Response> {
           email: googleUser.email,
           name: googleUser.name,
           picture: googleUser.picture,
+          expired_at: token.expires_in,
+          verified: true,
+          updated_at: new Date(),
         })
         .returning();
       console.log('new user created', newUser);
@@ -60,6 +69,61 @@ export async function googleLogin(c: Context): Promise<Response> {
   } catch (e) {
     console.log(e);
     return c.json({ e });
+  }
+}
+
+export async function numberAuth(c: Context) {
+  try {
+    const body = await c.req.json();
+    phoneSchema.parse(body);
+    const randomOTP = otp.generateOTP(c.get('user').id, body.phoneNumber);
+
+    const options: RequestInit = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.WHATSAP_CLOUD_TOKEN}`,
+      },
+
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        // change mobile number
+        to: `91${body.phoneNumber}`,
+        type: 'text',
+        text: { body: `Ur OTP: ${randomOTP}` },
+      }),
+    };
+
+    const response = await fetch(
+      `https://graph.facebook.com/v22.0/${process.env.WHATSAPP_PHONE_ID}/messages`,
+      options,
+    );
+    const finalData = await response.json();
+
+    return c.text('number authentication');
+  } catch (e) {
+    console.log(e);
+    return c.json({ e }, 400);
+  }
+}
+
+export async function numberVerify(c: Context) {
+  try {
+    const body = await c.req.json();
+    const verified = otp.verifyOtp(c.get('user').id, body.otp);
+    if (verified) {
+      const currentUser = await db
+        .update(users)
+        .set({ phonenumber: `91${verified.phoneNumber}` }) // change to support all countries
+        .where(eq(users.id, c.get('user').id));
+
+      return c.text('Number verification');
+    } else {
+      throw new Error('otp not verified');
+    }
+  } catch (e) {
+    console.log(e);
+    return c.json({ e: e.message }, 400);
   }
 }
 

@@ -1,13 +1,9 @@
 import { Hono } from 'hono';
-import {
-  getAllMail,
-  webHookVerify,
-  webHookCallback,
-} from '../controllers/mail';
+import { getnMail, webHookVerify, webHookCallback } from '../controllers/mail';
 
 const app = new Hono();
 
-app.get('/', getAllMail);
+app.get('/', getnMail);
 app.get('/webhook', webHookVerify);
 app.post('/webhook', webHookCallback);
 

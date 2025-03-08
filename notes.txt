@@ -1,0 +1,19 @@
+number is authenticated by sending a mail with otp 
+send mail -> everytime there is a new mail 
+
+
+functions 
+	get -> last 10 mails 
+	after getting send / send directly 
+	forward
+	get labels based
+	get attachement
+
+	filter based on keyword 
+
+
+fix authentication for user -- use trigger 
+
+apply rate limiters 
+caching layer 
+build the frontend 

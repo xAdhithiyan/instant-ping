@@ -7,4 +7,8 @@ export const users = pgTable('user', {
   email: t.varchar().notNull(),
   name: t.varchar().notNull(),
   picture: t.varchar().notNull(),
+  updated_at: t.timestamp().notNull().defaultNow(),
+  expired_at: t.integer().notNull().default(0),
+  verified: t.boolean().notNull(),
+  phonenumber: t.varchar(),
 });

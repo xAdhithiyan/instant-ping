@@ -2,13 +2,13 @@ import type { Context } from 'hono';
 import { google } from 'googleapis';
 import authClient from '../utils/authClient';
 
-export async function getAllMail(c: Context) {
+export async function getnMail(c: Context, totalMails = 1) {
   try {
     authClient.setAuth(c.get('user').token);
     const mail = google.gmail({ version: 'v1', auth: authClient.getAuth() });
     const lastMail = await mail.users.messages.list({
       userId: 'me',
-      maxResults: 1,
+      maxResults: 2,
     });
 
     const mailDetials = await mail.users.messages.get({
@@ -17,8 +17,8 @@ export async function getAllMail(c: Context) {
     });
 
     console.log(mailDetials);
-    const subject = mailDetials.data.payload?.headers;
-    console.log(subject);
+    //const subject = mailDetials.data.payload?.headers;
+    //console.log(subject);
 
     const options: RequestInit = {
       method: 'POST',
@@ -29,6 +29,7 @@ export async function getAllMail(c: Context) {
 
       body: JSON.stringify({
         messaging_product: 'whatsapp',
+        // change mobile number
         to: '919629050439',
         type: 'text',
         text: { body: 'hello how are you' },
@@ -36,7 +37,7 @@ export async function getAllMail(c: Context) {
     };
 
     const response = await fetch(
-      'https://graph.facebook.com/v22.0/602049379649444/messages',
+      `https://graph.facebook.com/v22.0/${process.env.WHATSAPP_PHONE_ID}/messages`,
       options,
     );
     const data = await response.json();
@@ -62,8 +63,19 @@ export async function webHookVerify(c: Context) {
 }
 
 export async function webHookCallback(c: Context) {
-  let body = await c.req.json();
-  body = JSON.stringify(body);
-  console.log(body);
+  console.log(c.get('user'));
+  const body = await c.req.json();
+
+  console.log(JSON.stringify(body, null, 2));
+
+  // if (body.entry[0]?.changes[0].value.messages[0]) {
+  //   const text = body.entry[0]?.changes[0].value.messages[0].text.body;
+  //
+  //   if (text.trim().includes('get')) {
+  //     console.log(text);
+  //
+  //     //check auth before redirecting
+  //   }
+  // }
   c.text('got the detials', 200);
 }
