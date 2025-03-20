@@ -1,17 +1,19 @@
 send mail -> everytime there is a new mail 
 
-
 functions 
-	get -> last 10 mails 
+	get single mail 
 	after getting send / send directly 
 	forward
 	get labels based
 	get attachement
 
-	filter based on keyword 
+	filter based on keyword
 
 
 
-apply rate limiters 
+apply rate limiters
 caching layer 
 build the frontend 
+
+done: 
+get n mails -> get 10

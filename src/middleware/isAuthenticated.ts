@@ -9,8 +9,8 @@ export async function isAuthenticated(c: Context, next: Next) {
   if (c.req.path.match('/api/auth/google')) {
     await next();
   } else if (c.req.path.match('/api/mail/webhook')) {
-    console.log('sbdfjosbndafljansdfljansbfdljabnfjladbnfaljdfb');
     // whatsapp webhoob access
+
     const data = await c.req.json();
     if (
       Object.prototype.hasOwnProperty.call(data, 'entry') &&
@@ -25,6 +25,8 @@ export async function isAuthenticated(c: Context, next: Next) {
 
       // verifying when message is being recieved to the server
       if (phoneNumer_message_recieved) {
+        c.set('recieving_message', true);
+
         const fetchedUser = await db
           .select()
           .from(users)
@@ -45,7 +47,20 @@ export async function isAuthenticated(c: Context, next: Next) {
               .update(users)
               .set({ verified: false })
               .where(eq(users.id, session.get('id')));
+
+            const user = {
+              doesntExist: true,
+              phonenumber: phoneNumer_message_recieved,
+            };
+            c.set('user', user);
           }
+        } else {
+          console.log('access denied');
+          const user = {
+            doesntExist: true,
+            phonenumber: phoneNumer_message_recieved,
+          };
+          c.set('user', user);
         }
 
         // verifying before sending a message from server-> cant be done here
