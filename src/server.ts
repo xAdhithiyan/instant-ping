@@ -8,7 +8,9 @@ import authRouter from './routes/auth.ts';
 import mailRouter from './routes/mail.ts';
 import dotenv from 'dotenv';
 import path from 'path';
+import s3Commands from './utils/s3Commands.ts';
 import './db/db.ts';
+import './utils/redis.ts';
 import './utils/authClient.ts';
 
 dotenv.config({
@@ -39,6 +41,8 @@ app.use(
   })
 );
 app.use('*', isAuthenticated);
+
+s3Commands.checkConnection();
 
 app.route('/api/auth', authRouter);
 app.route('/api/mail', mailRouter);

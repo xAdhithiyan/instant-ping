@@ -1,6 +1,6 @@
 import { type Context } from 'hono';
-import fetchOptions from '../utils/fetchOptions';
-import { getnMail, invalidCommand } from './mail';
+import { fetchOptions } from '../utils/fetchOptions';
+import { getnMail, invalidCommand, getSingleMail } from './mail';
 
 export async function webHookVerify(c: Context) {
   console.log('webhook callback function');
@@ -17,7 +17,7 @@ export async function webHookVerify(c: Context) {
 export async function webHookCallback(c: Context) {
   try {
     const body = await c.req.json();
-    console.log(JSON.stringify(body, null, 2));
+    // console.log(JSON.stringify(body, null, 2));
 
     if (c.get('user')?.doesntExist) {
       const options = fetchOptions({
@@ -46,6 +46,12 @@ export async function webHookCallback(c: Context) {
         }
 
         getnMail(c, number);
+      } else if (parts[0] == 'index' && !isNaN(parseInt(parts[1], 10))) {
+        const number = parseInt(parts[1], 10);
+        const mail = await getSingleMail(c, number);
+        if (!mail) {
+          throw new Error('Index not found.');
+        }
       } else {
         throw new Error(
           'Invalid command. Type "help" to get all valid commands.'

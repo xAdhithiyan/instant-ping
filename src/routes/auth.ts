@@ -18,9 +18,13 @@ app.use(
     client_id: process.env.GOOGLE_CLIENT_ID,
     client_secret: process.env.GOOGLE_CLIENT_SECRECT,
     redirect_uri: process.env.GOOGLE_CALLBACK_2,
-    scope: ['profile', 'https://www.googleapis.com/auth/gmail.readonly'],
+    scope: [
+      'profile',
+      'https://www.googleapis.com/auth/gmail.readonly',
+      'https://www.googleapis.com/auth/gmail.modify',
+    ],
   }),
-  googleLogin,
+  googleLogin
 );
 
 app.get('/logout', googleLogout);

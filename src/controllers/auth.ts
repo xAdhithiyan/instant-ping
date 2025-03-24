@@ -2,8 +2,9 @@ import { type Context } from 'hono';
 import { db } from '../db/db';
 import { users } from '../db/schema/users';
 import { eq, isNull } from 'drizzle-orm';
-import { phoneSchema } from '../utils/zodSchema';
+import { phoneSchema, otpSchema } from '../utils/zodSchema';
 import otp from '../utils/otpGenerator';
+import { ZodError } from 'zod';
 
 export function status(c: Context): Response {
   try {
@@ -76,7 +77,7 @@ export async function numberAuth(c: Context) {
   try {
     const body = await c.req.json();
     phoneSchema.parse(body);
-    const randomOTP = otp.generateOTP(c.get('user').id, body.phoneNumber);
+    const randomOTP = await otp.generateOTP(c.get('user').id, body.phoneNumber);
 
     const options: RequestInit = {
       method: 'POST',
@@ -111,11 +112,12 @@ export async function numberAuth(c: Context) {
 export async function numberVerify(c: Context) {
   try {
     const body = await c.req.json();
-    const verified = otp.verifyOtp(c.get('user').id, body.otp);
-    if (verified) {
+    otpSchema.parse(body);
+    const phoneNumber = await otp.verifyOtp(c.get('user').id, body.otp);
+    if (phoneNumber) {
       await db
         .update(users)
-        .set({ phonenumber: `91${verified.phoneNumber}` }) // change to support all countries
+        .set({ phonenumber: `91${phoneNumber}` }) // change to support all countries
         .where(eq(users.id, c.get('user').id));
 
       return c.text('Number verification');
@@ -123,8 +125,10 @@ export async function numberVerify(c: Context) {
       throw new Error('otp not verified');
     }
   } catch (e) {
-    console.log(e);
-    return c.json({ err: (e as Error).message }, 400);
+    if (e instanceof ZodError) {
+      return c.json({ e }, 400);
+    }
+    return c.json({ e: (e as Error).message }, 400);
   }
 }
 

@@ -1,5 +1,3 @@
-import type { string } from 'zod';
-
 export type SessionDataTypes = {
   id: string;
 };
@@ -14,4 +12,5 @@ export type optionsType = {
   to: string;
   type: string;
   body: string;
+  link?: string;
 };

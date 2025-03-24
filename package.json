@@ -22,12 +22,17 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.774.0",
+    "@aws-sdk/s3-request-presigner": "^3.774.0",
     "@hono/oauth-providers": "^0.6.2",
     "drizzle-orm": "^0.39.2",
+    "form-data": "^4.0.2",
+    "fs": "^0.0.1-security",
     "googleapis": "^144.0.0",
     "hono": "^4.6.20",
     "hono-sessions": "^0.7.1",
     "postgres": "^3.4.5",
+    "redis": "^4.7.0",
     "tunnelmole": "^2.3.7",
     "zod": "^3.24.2"
   }

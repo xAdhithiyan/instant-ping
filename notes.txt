@@ -1,7 +1,6 @@
 send mail -> everytime there is a new mail 
 
 functions 
-	get single mail 
 	after getting send / send directly 
 	forward
 	get labels based
@@ -10,10 +9,11 @@ functions
 	filter based on keyword
 
 
-
-apply rate limiters
-caching layer 
-build the frontend 
+use chatgpt to reduce length of characters when retrieving a message
+build the frontend
+redis for database
+redis for s3 
 
 done: 
-get n mails -> get 10
+get n mails -> get n
+get single mail -> index n
