@@ -3,6 +3,7 @@ function checkMimeType(filename: string) {
   switch (parts[parts.length - 1]) {
     case 'jpeg':
     case 'png':
+    case 'jpg':
       return {
         type: 'image',
         mime: `image/${parts[parts.length - 1]}`,

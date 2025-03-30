@@ -2,10 +2,7 @@ send mail -> everytime there is a new mail
 
 functions 
 	after getting send / send directly 
-	forward
 	get labels based
-	get attachement
-
 	filter based on keyword
 
 
@@ -17,3 +14,4 @@ redis for s3
 done: 
 get n mails -> get n
 get single mail -> index n
+forward a message -> forward n <email>

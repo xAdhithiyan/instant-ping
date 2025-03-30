@@ -33,6 +33,7 @@
     "hono-sessions": "^0.7.1",
     "postgres": "^3.4.5",
     "redis": "^4.7.0",
+    "sharp": "^0.33.5",
     "tunnelmole": "^2.3.7",
     "zod": "^3.24.2"
   }

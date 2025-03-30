@@ -33,6 +33,7 @@ async function add(filename: string, body: Buffer) {
       Body: body,
       ContentType: checkMimeType(filename)?.mime as string,
     };
+
     const command = new PutObjectCommand(params);
     await s3.send(command);
   } catch (e) {

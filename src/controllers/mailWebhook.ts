@@ -1,6 +1,17 @@
 import { type Context } from 'hono';
 import { fetchOptions } from '../utils/fetchOptions';
-import { getnMail, invalidCommand, getSingleMail } from './mail';
+import {
+  getnMail,
+  invalidCommand,
+  getSingleMail,
+  replyMail,
+  replayMailStage1,
+  replayMailStage2,
+  replayMailStage3,
+  forwardMessage,
+  forwardMessageStage1,
+} from './mail';
+import { redisClient } from '../utils/redis';
 
 export async function webHookVerify(c: Context) {
   console.log('webhook callback function');
@@ -17,7 +28,7 @@ export async function webHookVerify(c: Context) {
 export async function webHookCallback(c: Context) {
   try {
     const body = await c.req.json();
-    // console.log(JSON.stringify(body, null, 2));
+    console.log(body);
 
     if (c.get('user')?.doesntExist) {
       const options = fetchOptions({
@@ -35,10 +46,13 @@ export async function webHookCallback(c: Context) {
       c.get('recieving_message') &&
       body.entry[0]?.changes[0]?.value?.messages[0]?.text?.body
     ) {
-      const text: string =
-        body.entry[0]?.changes[0]?.value?.messages[0]?.text?.body;
+      console.log(JSON.stringify(body, null, 2));
+      const text: string = body.entry[0]?.changes[0]?.value?.messages[0]?.text?.body;
 
       const parts = text.split(/\s+/);
+      const reply = await redisClient.get('reply');
+      const forward = await redisClient.get('forward');
+
       if (parts[0] == 'get' && !isNaN(parseInt(parts[1], 10))) {
         const number = parseInt(parts[1], 10);
         if (number < 1 || number > 20) {
@@ -46,18 +60,53 @@ export async function webHookCallback(c: Context) {
         }
 
         getnMail(c, number);
+        await redisClient.del('reply');
       } else if (parts[0] == 'index' && !isNaN(parseInt(parts[1], 10))) {
         const number = parseInt(parts[1], 10);
-        const mail = await getSingleMail(c, number);
+
+        if (number < 1 || number > 20) {
+          throw new Error('Invalid Index');
+        }
+        getSingleMail(c, number); // not awating async function so whatsapp doesnt resend message on failure -> i have no idea what i am doing
+        await redisClient.del('reply');
+        await redisClient.del('forward');
+      } else if (parts[0] == 'reply' && !isNaN(parseInt(parts[1], 10))) {
+        const number = parseInt(parts[1], 10);
+        const mail = await replyMail(c, number);
         if (!mail) {
           throw new Error('Index not found.');
         }
+        await redisClient.del('forward');
+      } else if (
+        parts[0] == 'forward' &&
+        !isNaN(parseInt(parts[1], 10)) &&
+        parts[2] != undefined &&
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(parts[2].trim())
+      ) {
+        const allMail = await redisClient.hGetAll('mail');
+        const total = Object.keys(allMail).length;
+        if (total < parseInt(parts[1]) || parseInt(parts[1]) < 0) {
+          throw new Error('No Message to forward. Try "get n"');
+        }
+
+        forwardMessage(c, Object.keys(allMail)[parseInt(parts[1]) - 1], parts[2]);
+        await redisClient.del('reply');
+      } else if (reply) {
+        const paresedReply = JSON.parse(reply);
+        if (paresedReply.stage == 1) {
+          replayMailStage1(c, text);
+        } else if (paresedReply.stage == 2) {
+          replayMailStage2(c, text);
+        } else {
+          replayMailStage3(c, text);
+        }
+      } else if (forward) {
+        forwardMessageStage1(c, text);
       } else {
-        throw new Error(
-          'Invalid command. Type "help" to get all valid commands.'
-        );
+        throw new Error('Invalid command. Type "help" to get all valid commands.');
       }
     }
+
     c.text('got the detials', 200);
   } catch (e) {
     invalidCommand(c, (e as Error).message);
