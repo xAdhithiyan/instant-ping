@@ -12,6 +12,7 @@ import s3Commands from './utils/s3Commands.ts';
 import './db/db.ts';
 import './utils/redis.ts';
 import './utils/authClient.ts';
+import './controllers/mail/pollMail.ts';
 
 dotenv.config({
   path: path.resolve(__dirname, '../.env'),

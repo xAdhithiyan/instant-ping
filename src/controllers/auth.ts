@@ -5,6 +5,7 @@ import { eq, isNull } from 'drizzle-orm';
 import { phoneSchema, otpSchema } from '../utils/zodSchema';
 import otp from '../utils/otpGenerator';
 import { ZodError } from 'zod';
+import { redisClient } from '../utils/redis';
 
 export function status(c: Context): Response {
   try {
@@ -99,8 +100,7 @@ export async function numberAuth(c: Context) {
       `https://graph.facebook.com/v22.0/${process.env.WHATSAPP_PHONE_ID}/messages`,
       options
     );
-    const finalData = await response.json();
-    console.log(finalData);
+    await response.json();
 
     return c.text('number authentication');
   } catch (e) {
@@ -115,10 +115,37 @@ export async function numberVerify(c: Context) {
     otpSchema.parse(body);
     const phoneNumber = await otp.verifyOtp(c.get('user').id, body.otp);
     if (phoneNumber) {
-      await db
+      const currentUser = await db
         .update(users)
         .set({ phonenumber: `91${phoneNumber}` }) // change to support all countries
-        .where(eq(users.id, c.get('user').id));
+        .where(eq(users.id, c.get('user').id))
+        .returning();
+
+      await redisClient.hSet('allUsers', currentUser[0].id, JSON.stringify(currentUser[0]));
+      console.log(currentUser[0].phonenumber);
+
+      const options: RequestInit = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.WHATSAP_CLOUD_TOKEN}`,
+        },
+
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          to: `${currentUser[0].phonenumber}`,
+          type: 'text',
+          text: {
+            body: 'Account Verified',
+          },
+        }),
+      };
+      console.log(options);
+      const response = await fetch(
+        `https://graph.facebook.com/v22.0/${process.env.WHATSAPP_PHONE_ID}/messages`,
+        options
+      );
+      await response.json();
 
       return c.text('Number verification');
     } else {

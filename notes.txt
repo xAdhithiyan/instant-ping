@@ -1,17 +1,16 @@
-send mail -> everytime there is a new mail 
-
-functions 
-	after getting send / send directly 
-	get labels based
-	filter based on keyword
 
 
-use chatgpt to reduce length of characters when retrieving a message
+use chatgpt to reduce length of characters when retrieving a message 
 build the frontend
-redis for database
-redis for s3 
+redis for multiple clients
 
 done: 
-get n mails -> get n
-get single mail -> index n
-forward a message -> forward n <email>
+	get n mails -> get n
+	get single mail -> index n
+	forward a message -> forward n <email>
+	get labels based -> get n <label>
+	filter based on keyword -> get n -f <filter string> (or) get n <label> -f <filter string> 
+
+to test:
+	reply mail,
+	poll mail

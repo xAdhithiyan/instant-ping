@@ -4,13 +4,9 @@ const otp = (() => {
   const generateOTP = async (id: string = '', phoneNumber: string) => {
     const randomOTP = Math.floor(100000 + Math.random() * 900000);
     if (id) {
-      await redisClient.set(
-        `opt:${id}`,
-        JSON.stringify({ phoneNumber, randomOTP }),
-        {
-          EX: 300,
-        }
-      );
+      await redisClient.set(`opt:${id}`, JSON.stringify({ phoneNumber, randomOTP }), {
+        EX: 300,
+      });
     }
     return randomOTP;
   };

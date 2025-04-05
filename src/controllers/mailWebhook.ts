@@ -1,17 +1,12 @@
 import { type Context } from 'hono';
 import { fetchOptions } from '../utils/fetchOptions';
-import {
-  getnMail,
-  invalidCommand,
-  getSingleMail,
-  replyMail,
-  replayMailStage1,
-  replayMailStage2,
-  replayMailStage3,
-  forwardMessage,
-  forwardMessageStage1,
-} from './mail';
+import { invalidCommand } from './mail';
+import { getnMail } from './mail/getnMail';
+import { getSingleMail } from './mail/getSingleMail';
+import { replyMail, replayMailStage1, replayMailStage2, replayMailStage3 } from './mail/replyMail';
+import { forwardMessage, forwardMessageStage1 } from './mail/forwardMail';
 import { redisClient } from '../utils/redis';
+import { checkValidLabel } from '../utils/checkValidLabel';
 
 export async function webHookVerify(c: Context) {
   console.log('webhook callback function');
@@ -28,7 +23,7 @@ export async function webHookVerify(c: Context) {
 export async function webHookCallback(c: Context) {
   try {
     const body = await c.req.json();
-    console.log(body);
+    //console.log(body);
 
     if (c.get('user')?.doesntExist) {
       const options = fetchOptions({
@@ -46,7 +41,7 @@ export async function webHookCallback(c: Context) {
       c.get('recieving_message') &&
       body.entry[0]?.changes[0]?.value?.messages[0]?.text?.body
     ) {
-      console.log(JSON.stringify(body, null, 2));
+      //console.log(JSON.stringify(body, null, 2));
       const text: string = body.entry[0]?.changes[0]?.value?.messages[0]?.text?.body;
 
       const parts = text.split(/\s+/);
@@ -59,7 +54,20 @@ export async function webHookCallback(c: Context) {
           throw new Error('Value must be between 1-20');
         }
 
-        getnMail(c, number);
+        if (parts[2] == undefined) {
+          getnMail(c, number);
+        } else if (parts[2] == '-f') {
+          getnMail(c, number, '', parts.slice(3).join(' '));
+        } else if (checkValidLabel(parts[2])) {
+          if (parts[3] == '-f') {
+            getnMail(c, number, parts[2].toUpperCase(), parts.slice(4).join(' '));
+          } else {
+            getnMail(c, number, parts[2].toUpperCase());
+          }
+        } else {
+          throw new Error('Invalid Label');
+        }
+
         await redisClient.del('reply');
       } else if (parts[0] == 'index' && !isNaN(parseInt(parts[1], 10))) {
         const number = parseInt(parts[1], 10);
@@ -67,7 +75,8 @@ export async function webHookCallback(c: Context) {
         if (number < 1 || number > 20) {
           throw new Error('Invalid Index');
         }
-        getSingleMail(c, number); // not awating async function so whatsapp doesnt resend message on failure -> i have no idea what i am doing
+        // not awating async function so whatsapp doesnt resend message on failure -> i have no idea what i am doing
+        getSingleMail(c, number);
         await redisClient.del('reply');
         await redisClient.del('forward');
       } else if (parts[0] == 'reply' && !isNaN(parseInt(parts[1], 10))) {
