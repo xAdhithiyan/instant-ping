@@ -9,7 +9,8 @@ export async function getnMail(
   num?: number,
   label: string = '',
   filter: string = '',
-  token: string = ''
+  token: string = '',
+  id: string = ''
 ) {
   try {
     let mail;
@@ -60,11 +61,12 @@ export async function getnMail(
       };
     });
 
-    await redisClient.del('mail');
+    const userId = c?.get('user').id ? c?.get('user').id : id;
+    await redisClient.del(`${userId}mail`);
     const stringSubject = (
       await Promise.all(
         subject.map(async (item) => {
-          await redisClient.hSet('mail', `${item.index}`, JSON.stringify(item));
+          await redisClient.hSet(`${userId}mail`, `${item.index}`, JSON.stringify(item));
 
           return `Index: ${item.index}\nFrom: ${item.from}\nSub: ${item.sub}`;
         })

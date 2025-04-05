@@ -5,7 +5,7 @@ import authClient from '../../utils/authClient';
 
 export async function replyMail(c: Context, index: number) {
   try {
-    const message = await redisClient.hGet('mail', `${index}`);
+    const message = await redisClient.hGet(`${c.get('user').id}mail`, `${index}`);
     let parsedMessage = JSON.parse(message as string);
     parsedMessage = { ...parsedMessage, stage: 1 };
 
@@ -20,7 +20,7 @@ export async function replyMail(c: Context, index: number) {
       options
     );
 
-    await redisClient.set('reply', JSON.stringify(parsedMessage), {
+    await redisClient.set(`${c.get('user').id}reply`, JSON.stringify(parsedMessage), {
       EX: 360,
     });
 
@@ -31,7 +31,7 @@ export async function replyMail(c: Context, index: number) {
 }
 export async function replayMailStage1(c: Context, sub: string) {
   try {
-    const message = await redisClient.get('reply');
+    const message = await redisClient.get(`${c.get('user').id}reply`);
     const parsedMessage = JSON.parse(message as string);
     parsedMessage.stage = 2;
     parsedMessage.sendSub = sub;
@@ -48,7 +48,7 @@ export async function replayMailStage1(c: Context, sub: string) {
       options
     );
 
-    await redisClient.set('reply', JSON.stringify(parsedMessage), {
+    await redisClient.set(`${c.get('user').id}reply`, JSON.stringify(parsedMessage), {
       EX: 360,
     });
   } catch (e) {
@@ -58,7 +58,7 @@ export async function replayMailStage1(c: Context, sub: string) {
 
 export async function replayMailStage2(c: Context, text: string) {
   try {
-    const message = await redisClient.get('reply');
+    const message = await redisClient.get(`${c.get('user').id}reply`);
     const parsedMessage = JSON.parse(message as string);
     parsedMessage.stage = 3;
     parsedMessage.text = text;
@@ -75,7 +75,7 @@ export async function replayMailStage2(c: Context, text: string) {
       options
     );
 
-    await redisClient.set('reply', JSON.stringify(parsedMessage), {
+    await redisClient.set(`${c.get('user').id}reply`, JSON.stringify(parsedMessage), {
       EX: 360,
     });
   } catch (e) {
@@ -85,9 +85,9 @@ export async function replayMailStage2(c: Context, text: string) {
 
 export async function replayMailStage3(c: Context, text: string) {
   try {
-    const message = await redisClient.get('reply');
+    const message = await redisClient.get(`${c.get('user').id}reply`);
     const parsedMessage = JSON.parse(message as string);
-    await redisClient.del('reply');
+    await redisClient.del(`${c.get('user').id}reply`);
 
     if (text.trim() == 'y') {
       const mail = authClient.setAuth(c.get('user').token);

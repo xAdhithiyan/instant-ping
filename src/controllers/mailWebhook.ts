@@ -45,8 +45,8 @@ export async function webHookCallback(c: Context) {
       const text: string = body.entry[0]?.changes[0]?.value?.messages[0]?.text?.body;
 
       const parts = text.split(/\s+/);
-      const reply = await redisClient.get('reply');
-      const forward = await redisClient.get('forward');
+      const reply = await redisClient.get(`${c.get('user').id}reply`);
+      const forward = await redisClient.get(`${c.get('user').id}forward`);
 
       if (parts[0] == 'get' && !isNaN(parseInt(parts[1], 10))) {
         const number = parseInt(parts[1], 10);
@@ -68,7 +68,7 @@ export async function webHookCallback(c: Context) {
           throw new Error('Invalid Label');
         }
 
-        await redisClient.del('reply');
+        await redisClient.del(`${c.get('user').id}reply`);
       } else if (parts[0] == 'index' && !isNaN(parseInt(parts[1], 10))) {
         const number = parseInt(parts[1], 10);
 
@@ -77,29 +77,29 @@ export async function webHookCallback(c: Context) {
         }
         // not awating async function so whatsapp doesnt resend message on failure -> i have no idea what i am doing
         getSingleMail(c, number);
-        await redisClient.del('reply');
-        await redisClient.del('forward');
+        await redisClient.del(`${c.get('user').id}reply`);
+        await redisClient.del(`${c.get('user').id}forward`);
       } else if (parts[0] == 'reply' && !isNaN(parseInt(parts[1], 10))) {
         const number = parseInt(parts[1], 10);
         const mail = await replyMail(c, number);
         if (!mail) {
           throw new Error('Index not found.');
         }
-        await redisClient.del('forward');
+        await redisClient.del(`${c.get('user').id}forward`);
       } else if (
         parts[0] == 'forward' &&
         !isNaN(parseInt(parts[1], 10)) &&
         parts[2] != undefined &&
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(parts[2].trim())
       ) {
-        const allMail = await redisClient.hGetAll('mail');
+        const allMail = await redisClient.hGetAll(`${c.get('user').id}mail`);
         const total = Object.keys(allMail).length;
         if (total < parseInt(parts[1]) || parseInt(parts[1]) < 0) {
           throw new Error('No Message to forward. Try "get n"');
         }
 
         forwardMessage(c, Object.keys(allMail)[parseInt(parts[1]) - 1], parts[2]);
-        await redisClient.del('reply');
+        await redisClient.del(`${c.get('user').id}reply`);
       } else if (reply) {
         const paresedReply = JSON.parse(reply);
         if (paresedReply.stage == 1) {

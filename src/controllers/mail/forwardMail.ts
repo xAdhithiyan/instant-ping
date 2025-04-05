@@ -6,7 +6,7 @@ import { extractCharacters } from '../../utils/extractCharacter';
 
 export async function forwardMessage(c: Context, key: string, mailAddress: string) {
   try {
-    const mail = await redisClient.hGet('mail', key);
+    const mail = await redisClient.hGet(`${c.get('user').id}mail`, key);
     const paresedMail = JSON.parse(mail as string);
 
     const options = fetchOptions({
@@ -22,16 +22,16 @@ export async function forwardMessage(c: Context, key: string, mailAddress: strin
     );
 
     paresedMail.forwardMail = mailAddress;
-    await redisClient.set('forward', JSON.stringify(paresedMail));
+    await redisClient.set(`${c.get('user').id}forward`, JSON.stringify(paresedMail));
   } catch (e) {
     console.log(e);
   }
 }
 
 export async function forwardMessageStage1(c: Context, text: string) {
-  const forwardMailDetial = await redisClient.get('forward');
+  const forwardMailDetial = await redisClient.get(`${c.get('user').id}forward`);
   const parsedForwardMailDetial = JSON.parse(forwardMailDetial as string);
-  await redisClient.del('forward');
+  await redisClient.del(`${c.get('user').id}forward`);
 
   console.log(parsedForwardMailDetial);
 

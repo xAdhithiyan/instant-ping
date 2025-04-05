@@ -1,8 +1,4 @@
-
-
-use chatgpt to reduce length of characters when retrieving a message 
 build the frontend
-redis for multiple clients
 
 done: 
 	get n mails -> get n
@@ -14,3 +10,6 @@ done:
 to test:
 	reply mail,
 	poll mail
+
+issues: 
+	whatsapp max body size is 4k words

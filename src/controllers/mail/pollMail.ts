@@ -6,18 +6,17 @@ import { fetchOptions } from '../../utils/fetchOptions';
 export async function pollApi() {
   console.log('polling');
   const allUsers = await redisClient.hGetAll('allUsers');
-  // must change to mail for each user
-  const allMail = await redisClient.hGetAll('mail');
 
   for (const key in allUsers) {
     const user = allUsers[key];
     const parsedUser = JSON.parse(user);
+    const allMail = await redisClient.hGetAll(`${parsedUser.id}mail`);
     const checkExpire = await expireAuth(parsedUser.id);
     if (checkExpire) {
-      await getnMail(undefined, 10, '', '', parsedUser.token);
+      await getnMail(undefined, 10, '', '', parsedUser.token, parsedUser.id);
 
       const removedIndexAllMail = removeIndex(allMail);
-      const newAllMail = await redisClient.hGetAll('mail');
+      const newAllMail = await redisClient.hGetAll(`${parsedUser.id}mail`);
       const removedIndexNewAllMail = removeIndex(newAllMail);
 
       const oldValues = new Set(Object.values(removedIndexAllMail!));

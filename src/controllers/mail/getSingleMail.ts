@@ -10,7 +10,7 @@ export async function getSingleMail(c: Context, index: number) {
   try {
     const mail = authClient.setAuth(c.get('user').token);
 
-    const currentMail = await redisClient.hGet('mail', `${index}`);
+    const currentMail = await redisClient.hGet(`${c.get('user').id}mail`, `${index}`);
     const paresedCurrentMail = JSON.parse(currentMail as string);
     if (currentMail == null) {
       return false;
