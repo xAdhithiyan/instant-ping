@@ -1,5 +1,6 @@
 import { Hono, type Context } from 'hono';
 import { logger } from 'hono/logger';
+import { cors } from 'hono/cors';
 import { trimTrailingSlash } from 'hono/trailing-slash';
 import { CookieStore, sessionMiddleware, Session } from 'hono-sessions';
 import { type SessionDataTypes } from './types/types.ts';
@@ -25,6 +26,14 @@ const app = new Hono<{
   };
 }>({});
 
+app.use(
+  '*',
+  cors({
+    origin: ['http://localhost:8080', 'https://frontend.adhithiyan-example.xyz'],
+    credentials: true,
+  })
+);
+
 app.use(logger());
 app.use(trimTrailingSlash());
 const store = new CookieStore();
@@ -35,9 +44,11 @@ app.use(
     encryptionKey: process.env.SESSION_SECRET,
     expireAfterSeconds: 3600,
     cookieOptions: {
-      sameSite: 'Lax',
+      sameSite: 'None',
+      secure: true,
       path: '/',
       httpOnly: true,
+      partitioned: true,
     },
   })
 );

@@ -4,17 +4,48 @@ import { users } from '../db/schema/users';
 import { eq, isNull } from 'drizzle-orm';
 import { phoneSchema, otpSchema } from '../utils/zodSchema';
 import otp from '../utils/otpGenerator';
-import { ZodError } from 'zod';
 import { redisClient } from '../utils/redis';
+import { getCookie } from 'hono/cookie';
+// import { getCookie, setCookie } from 'hono/cookie';
 
 export function status(c: Context): Response {
   try {
-    const session = c.get('session');
-    const id = session.get('id');
-    if (!id) {
-      throw new Error('not authenticated');
+    const user = c.get('user');
+    console.log(user);
+    if (!user) {
+      throw new Error('not authenticated bruh');
     }
-    return c.json({ message: 'authenticated' });
+
+    console.log(getCookie(c));
+    const response = c.redirect('https://frontend.adhithiyan-example.xyz');
+    return response;
+  } catch (e) {
+    console.log(e);
+    if (e instanceof Error) {
+      return c.json({ Err: e.message });
+    }
+    return c.json({ Err: 'error' });
+  }
+}
+
+export function frontEndStatus(c: Context): Response {
+  try {
+    return c.redirect('/api/auth/frontend-2-status');
+    // console.log('123123');
+    // return c.json({ Message: 'workin' });
+  } catch (e) {
+    console.log(e);
+    if (e instanceof Error) {
+      return c.json({ Err: e.message });
+    }
+    return c.json({ Err: 'error' });
+  }
+}
+
+export function frontEndStatus2(c: Context): Response {
+  try {
+    console.log('123123');
+    return c.json({ Message: 'workin' });
   } catch (e) {
     console.log(e);
     if (e instanceof Error) {
@@ -102,7 +133,7 @@ export async function numberAuth(c: Context) {
     );
     await response.json();
 
-    return c.text('number authentication');
+    return c.json({ Message: 'number authentication' });
   } catch (e) {
     console.log(e);
     return c.json({ e }, 400);
@@ -147,15 +178,28 @@ export async function numberVerify(c: Context) {
       );
       await response.json();
 
-      return c.text('Number verification');
+      return c.json([{ Message: 'Number verification' }]);
     } else {
       throw new Error('otp not verified');
     }
   } catch (e) {
-    if (e instanceof ZodError) {
-      return c.json({ e }, 400);
+    return c.json({ e }, 400);
+  }
+}
+
+export async function numberStatus(c: Context) {
+  try {
+    const session = c.get('session');
+    const fetchedUserRedis = await redisClient.hGet('allUsers', session.get('id'));
+    const ParsedUser = JSON.parse(fetchedUserRedis as string);
+
+    if (ParsedUser.phonenumber != null) {
+      return c.json({ Message: 'number verified' });
     }
-    return c.json({ e: (e as Error).message }, 400);
+    throw new Error('Number not verified');
+  } catch (e) {
+    console.log('error', e);
+    return c.json({ error: (e as Error).message || 'Something went wrong' }, 400);
   }
 }
 

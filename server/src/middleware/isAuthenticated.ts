@@ -7,7 +7,7 @@ import { redisClient } from '../utils/redis';
 export async function isAuthenticated(c: Context, next: Next) {
   const session = c.get('session');
 
-  if (c.req.path.match('/api/auth/google')) {
+  if (c.req.path.match('/api/auth/google') || c.req.path.match('/api/auth/frontend-status')) {
     await next();
   } else if (c.req.path.match('/api/mail/webhook')) {
     // whatsapp webhoob access
@@ -95,7 +95,8 @@ export async function isAuthenticated(c: Context, next: Next) {
             parsedFetchedUserRedis.expired_at * 1000
         );
         const currentDate: Date = new Date();
-
+        console.log(expireDate);
+        console.log(currentDate);
         if (currentDate < expireDate) {
           console.log('access granted');
           c.set('user', parsedFetchedUserRedis);
@@ -110,6 +111,7 @@ export async function isAuthenticated(c: Context, next: Next) {
         }
       }
     }
+    return c.json({ isAuthenticated: false }, 401);
   }
   return c.json({ isAuthenticated: false });
 }

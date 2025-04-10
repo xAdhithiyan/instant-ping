@@ -1,16 +1,22 @@
 import { Hono } from 'hono';
 import { googleAuth } from '@hono/oauth-providers/google';
 import {
+  frontEndStatus,
   googleLogin,
   googleLogout,
   numberAuth,
   numberVerify,
   status,
+  frontEndStatus2,
+  numberStatus,
 } from '../controllers/auth';
 
 const app = new Hono();
 
 app.get('/status', status);
+app.get('/frontend-status', frontEndStatus);
+app.get('/frontend-2-status', frontEndStatus2);
+app.get('/number-status', numberStatus);
 
 app.use(
   '/google',
